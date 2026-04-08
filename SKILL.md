@@ -1,255 +1,304 @@
 ---
 name: prd-to-system-analysis
-description: Generates system analysis documents from PRD and project context using an SDD-style staged workflow with historical-sample alignment, large-PRD decomposition, and multi-document output. Supports inline text or PRD file input, enforces template-based output, and requires at least two solution options plus user selection before final drafting. Use when users mention PRD, 系分文档, 系统分析, 方案设计, PlantUML, or template-driven design docs.
+description: Generates system analysis documents from PRD and project context using an SDD state-machine workflow. Persists intermediate artifacts, supports resume/manual-edit sync, supports rollback on requirement corrections, and requires explicit DOC final gate before template drafting. Use when users mention PRD, 系分文档, 系统分析, 方案设计, PlantUML, or template-driven design docs.
 ---
 
-# PRD to 系分（SDD 方式）
+# PRD to 系分（SDD 状态机版）
 
-## 目标
+**Version:** 2.2 · **Logical id:** `prd_to_system_analysis`
 
-基于 PRD 和工程现状，产出一份可落地的系分文档。文档必须遵循模板结构，且设计过程必须先分析需求、再读取现状、再提供双方案让用户选择，最后继续细化。
+## Input
 
-## 输入
-
-- `prd`（必填）：PRD 正文，或 PRD 文件路径
+- `prd` (conditional): PRD 正文或 PRD 文件路径
 - `project_positioning`（可选）：工程定位、边界、上下游系统说明
-- `template_path`（可选）：系分模板路径，默认 `templates/系分模版.md`（当前标准模板）
+- `template_path`（可选）：系分模板路径，默认 `templates/系分模版.md`
 - `project_root`（可选）：工程根目录，默认当前工作目录
-- `output_path`（可选）：输出文件路径；未指定时在会话中输出并建议文件名
-- `historical_docs_dir`（可选）：历史 PRD/系分样本目录；未指定时优先使用当前工作目录
+- `output_path`（可选）：最终系分输出路径；多文档时可作为输出目录
+- `historical_docs_dir`（可选）：历史 PRD/系分样本目录
+- `artifact_dir`（可选）：中间产物目录（优先级最高）
+- `lang`（可选）：`zh-CN` | `en`（默认按用户本轮语言）
+- `start_phase`（可选）：`AUTO` | `SPEC` | `SPLIT` | `CURRENT_STATE` | `PLAN` | `DOC` | `REVIEW`（默认 `AUTO`）
+- `manual_edit_mode`（可选）：`on` | `off`（默认 `on`，接管用户手改中间文档）
+- `export_format`（可选）：`none` | `docx` | `doc` | `both`（默认 `none`，用于交付阶段导出）
 
-## 默认模板（当前系分模版）
+## Output
 
-- 若用户未指定 `template_path`，必须使用 `templates/系分模版.md`。
-- 若用户指定了其它模板，按用户指定执行，但需提示“与默认模板差异”可能带来的评审影响。
+- 分阶段中间文档：`spec/split/current-state/plan/review`
+- 最终系分文档（按模板，支持多系统多文档）
+- 可恢复状态文件：`analysis.state.<lang>.json`
+- 可选交付物：`system-analysis.<lang>.docx/.doc`（仅在用户明确要求时导出）
 
-## 输入解析规则（PRD 文本/文件）
+## Language mode
 
-1. 若 `prd` 像路径且文件存在，按文件读取；否则按内联文本处理。
-2. 支持优先级：`.md`、`.txt`、可读文本文件。
-3. 对 `.doc` / `.docx`：若无法可靠解析，不得臆造内容，要求用户转换为 `.md`/纯文本或直接粘贴。
-4. 进入正式设计前，必须具备可解析 PRD；若信息不足，先提问补齐关键缺口。
+1. `lang=zh-CN`：全量中文输出。
+2. `lang=en`：全量英文输出。
+3. 未指定 `lang`：按用户本轮语言自动识别。
+4. 每轮输出前先读取：
+   - `zh-CN` -> [templates/zh-CN.md](templates/zh-CN.md)
+   - `en` -> [templates/en.md](templates/en.md)
 
-## 历史样本对齐（先做再设计）
+## PRD 输入解析（文本/文件）
 
-若目录内存在历史 PRD 与系分文档，必须先读取并对齐其写作风格、抽象粒度和系统切分方式。
+1. `prd` 像路径且文件存在时按文件读取，否则按内联文本处理。
+2. 优先支持：`.md`、`.txt`、可读文本文件。
+3. 对 `.doc` / `.docx`：若无法可靠解析，不得臆造内容，要求用户转 `.md`/纯文本或直接粘贴。
+4. 若 `prd` 未显式提供：
+   - 自动在 `project_root` 搜索 PRD 候选（如 `*PRD*.md`、`【PRD】*.md`）；
+   - 仅 1 个候选时自动采用；
+   - 多个候选时要求用户选择；
+   - 无候选时要求用户提供 PRD。
+5. 进入首个阶段前必须有可解析 PRD；若信息不足，先提问补齐关键缺口。
 
-优先识别以下映射关系（文件名可近似匹配）：
+## Artifact directory（中间产物落盘）
+
+`artifact_root` 按以下优先级解析：
+
+1. `artifact_dir`（用户显式指定）
+2. 环境变量 `SDD_ARTIFACT_DIR`
+3. `project_root`
+
+建议在全局目录下使用子目录 `${SDD_ARTIFACT_DIR}/${project_slug}/`，避免多项目冲突。
+
+### Mandatory artifacts（必须落盘）
+
+在 `artifact_root` 下维护（按语言区分）：
+
+- `spec.<lang>.md`
+- `split.<lang>.md`
+- `current-state.<lang>.md`
+- `plan.<lang>.md`
+- `review.<lang>.md`
+- `analysis.state.<lang>.json`
+
+建议最终正文命名：
+- 单文档：`system-analysis.<lang>.md`
+- 多文档：`system-analysis.<system>.<lang>.md`
+
+## Resume behavior（恢复会话）
+
+每次进入 `INIT` 时先执行恢复检查：
+
+1. 定位 `artifact_root` 与 `lang`。
+2. 若存在 `analysis.state.<lang>.json` 或阶段文档，汇总最近进度。
+3. 询问用户：`resume`（继续历史）或 `restart`（从头开始）。
+4. `resume`：从最近未完成阶段继续，优先复用已落盘中间文档。
+5. `restart`：保留旧文档（可时间戳备份）并重启流程。
+
+## Start-from-any-phase（任意阶段启动）
+
+起始阶段解析优先级：
+
+1. `start_phase`（用户显式指定）
+2. `analysis.state.<lang>.json` 历史状态（resume）
+3. 默认 `SPEC`
+
+入口校验规则：
+
+- `SPEC`：直接进入。
+- `SPLIT`：优先读取 `spec.<lang>.md`；缺失则补最小需求基线或回退 `SPEC`。
+- `CURRENT_STATE`：优先读取 `split.<lang>.md`；缺失则补切片映射或回退 `SPLIT`。
+- `PLAN`：优先读取 `current-state.<lang>.md`；缺失则补现状证据或回退 `CURRENT_STATE`。
+- `DOC`：必须已确认 `PLAN`，且通过“最终成文确认门禁”；否则禁止进入。
+- `REVIEW`：必须存在最终系分文档；否则先完成 `DOC`。
+
+若上游产物缺失，不得假装已完成。必须显式告知缺口，并让用户选择：
+
+1. 补齐缺失产物后继续
+2. 回退到上一阶段生成
+3. 以用户提供摘要作为临时上游基线
+
+## Manual edit synchronization（人工修改接管）
+
+当 `manual_edit_mode=on`：
+
+1. 每次阶段开始前重新读取已有中间文档。
+2. 若检测到文件与状态记录不一致（时间戳/校验和变化），视为用户手改。
+3. 提示用户选择：
+   - `adopt`：采用手改版本继续
+   - `merge`：与当前草稿合并
+   - `regenerate`：基于最新输入重生成该阶段
+4. 未确认策略前，不覆盖用户手改内容。
+5. 若用户仅回复“ok/继续/确认”且未指定策略，默认按 `adopt` 处理，并在状态文件记录该默认行为。
+
+## Intent normalization（简短确认语义归一）
+
+当用户仅回复简短确认词（如 `ok`/`确认`/`继续`）时，按当前等待上下文解析：
+
+1. 等待阶段确认块 -> 视为本阶段确认通过。
+2. 等待 DOC 最终门禁 -> 视为“确认生成”。
+3. 等待手改策略 -> 默认 `adopt`。
+4. 等待方案选择 -> 不自动推断，必须二次确认具体选项（A/B/...）。
+
+## Requirement correction rollback（需求纠偏回退协议）
+
+当用户出现“理解错误/回溯/改需求/方案重做/范围变更”等信号：
+
+1. 识别受影响最早阶段（通常是 `SPEC` 或 `SPLIT`）。
+2. 回退状态到该阶段 `*_CONFIRMING`。
+3. 将下游产物标记为 `stale_due_to_spec_change`（或等价状态）。
+4. 保留旧文档，不删除；按新基线重生成并重新确认。
+5. 在状态文件记录：
+   - `rollback.from_phase`
+   - `rollback.trigger`
+   - `rollback.reason`
+   - `needs_regeneration`
+
+## Data evolution & compatibility protocol（字段/类型演进必检）
+
+若 PRD 包含“新增字段/新增类型/口径变化/旧逻辑兼容”：
+
+1. `CURRENT_STATE` 必须评估历史逻辑影响。
+2. `PLAN` 必须给出兼容方案，至少包含：
+   - 新字段写入逻辑
+   - 历史数据回填策略
+   - 旧作业/旧查询过滤策略
+   - 灰度与回滚路径
+3. `DOC` 必须落“历史逻辑影响与兼容处理”段。
+4. `REVIEW` 必须校验“字段演进 -> 兼容策略 -> 回归用例”闭环。
+
+## Naming governance（命名约束同步）
+
+若用户在 `PLAN` 阶段提出命名规范（如“统一使用债转凭证命名”）：
+
+1. 必须更新 `plan.<lang>.md` 中类/方法/接口命名。
+2. 必须同步到 `DOC` 正文，避免“方案命名”与“正文命名”不一致。
+3. `REVIEW` 阶段需增加命名一致性检查。
+
+## End-to-end flow
+
+```text
+[START: AUTO|SPEC|SPLIT|CURRENT_STATE|PLAN|DOC|REVIEW]
+-> 入口校验
+-> 手改同步
+-> SPEC -> SPLIT -> CURRENT_STATE -> PLAN
+-> DOC_FINAL_GATE（必须用户确认）
+-> DOC（模板成文）
+-> REVIEW
+-> (可选) EXPORT（doc/docx）
+-> DONE
+```
+
+## Non-negotiable rules
+
+1. 默认顺序执行，可显式跳转，但必须通过入口校验。
+2. Unknowns 必须显式标记 `❓`，禁止静默假设。
+3. 每阶段完成必须落盘并更新 `analysis.state.<lang>.json`。
+4. `PLAN` 阶段必须给至少两案（A/B）并等待用户选择。
+5. 用户未明确选项前，不得进入 `DOC`。
+6. 未经最终确认，不得进入 `DOC` 按模板生成正文。
+7. 必须先读 PRD，再读工程现状，再做方案，顺序不可反。
+8. 大 PRD 必须先做切片映射并确认，再进入方案与成文。
+9. 不得编造接口、表结构、现状能力；必须附证据路径/模块。
+10. 图统一使用 `PlantUML`，不得使用 Mermaid。
+11. 需求纠偏时必须回退并标记下游产物失效，不得“带病继续”。
+12. 涉及字段/类型演进时必须给兼容方案与迁移策略。
+13. 命名规范一旦被用户确认，后续阶段必须一致。
+14. 历史样本仅用于风格与边界对齐，冲突时以当前 PRD + 现状证据为准。
+
+## State machine
+
+| State | Meaning |
+|------|---------|
+| `INIT` | 读取输入并检查是否可恢复 |
+| `ENTRY_VALIDATING` | 校验阶段跳转前置条件 |
+| `ARTIFACT_SYNCING` | 同步用户手改中间文档 |
+| `ROLLBACK_SYNCING` | 需求纠偏后的回退与失效标记 |
+| `SPEC_DRAFT` / `SPEC_CONFIRMING` | 需求分析与确认 |
+| `SPLIT_DRAFT` / `SPLIT_CONFIRMING` | 切片映射与确认 |
+| `CURRENT_STATE_DRAFT` / `CURRENT_STATE_CONFIRMING` | 现状能力盘点与确认 |
+| `PLAN_DRAFT` / `PLAN_CONFIRMING` | A/B 方案与用户选择 |
+| `DOC_PENDING_FINAL_CONFIRM` | 等待最终成文确认（强门禁） |
+| `DOC_DRAFT` / `DOC_CONFIRMING` | 按模板生成系分正文并确认 |
+| `REVIEW_DRAFT` / `REVIEW_CONFIRMING` | 一致性校验与交付确认 |
+| `EXPORT_DRAFT` / `EXPORT_CONFIRMING` | 可选导出 doc/docx |
+| `DONE` | 结束 |
+
+Forbidden：未通过门禁直接生成正文；检测到手改后直接覆盖写盘。
+
+## Mandatory output blocks（每轮必带）
+
+按 `lang` 读取模板并使用：
+
+- Per-turn Footer / 每轮三件套
+- Phase Confirmation Block / 阶段确认块
+- Final Gate Before DOC / 最终成文门禁块
+- Resume Prompt Block / 历史恢复提示块
+- Phase-jump Entry Validation Block / 阶段跳转入口校验提示块
+- Manual Edit Detected Block / 检测到人工修改提示块
+- Rollback Prompt Block / 需求纠偏回退提示块
+
+## Phase routing（阶段路由）
+
+### Phase: SPEC
+
+1. 读取 [spec.md](spec.md)。
+2. 读取 [templates/spec.md](templates/spec.md) 对应语言骨架。
+3. 产出并写入 `spec.<lang>.md`，进入确认。
+
+### Phase: SPLIT
+
+1. 读取 [split.md](split.md)。
+2. 读取 [templates/split.md](templates/split.md) 对应语言骨架。
+3. 产出并写入 `split.<lang>.md`，进入确认。
+
+### Phase: CURRENT_STATE
+
+1. 读取 [current-state.md](current-state.md)。
+2. 读取 [templates/current-state.md](templates/current-state.md) 对应语言骨架。
+3. 产出并写入 `current-state.<lang>.md`，进入确认。
+4. 若存在字段/类型演进，必须增加历史逻辑影响盘点。
+
+### Phase: PLAN
+
+1. 读取 [plan.md](plan.md)。
+2. 读取 [templates/plan.md](templates/plan.md) 对应语言骨架。
+3. 强制输出 A/B 方案并要求用户选择。
+4. 若有字段/类型演进，必须给兼容与迁移方案。
+5. 若用户要求命名规范，必须写入方案并后续保持一致。
+6. 写入 `plan.<lang>.md`，进入确认。
+
+### Phase: DOC
+
+1. 读取 [doc.md](doc.md)。
+2. 读取 [templates/doc.md](templates/doc.md) 对应语言骨架。
+3. 再读取最终模板 [templates/系分模版.md](templates/系分模版.md)。
+4. 只有用户通过“Final Gate Before DOC”后，才可生成最终系分正文。
+
+### Phase: REVIEW
+
+1. 读取 [review.md](review.md)。
+2. 读取 [templates/review.md](templates/review.md) 对应语言骨架。
+3. 产出并写入 `review.<lang>.md`，进入交付确认。
+
+### Phase: EXPORT（可选）
+
+1. 仅当用户明确要求导出 `doc/docx` 时执行。
+2. 基于最终 `system-analysis.<lang>.md` 导出，不改动正文语义。
+3. 导出后记录输出文件路径到状态文件。
+
+## Domain heuristics（领域启发式）
+
+### 历史样本对齐
+
+若存在历史 PRD 与系分文档，先对齐风格、抽象粒度、系统切分方式：
 
 - `【PRD】微粒贷.md` -> `【lcs】微粒贷二期.md`、`【instloancore】微粒贷代偿后还款系分.md`
 - `【PRD】费率计算器升级.md` -> `【lcs】【系分】费率计算器升级.md`
 
-从历史样本提取：
+历史样本仅用于风格对齐，冲突时以“当前 PRD + 工程现状证据”为准。
 
-- 系统边界切分法（如 `lcs`、`instloancore`）
-- 常见改动点表达方式（接口、表结构、灰度开关、容差、回归）
-- 图文风格与章节颗粒度
-
-历史样本用于“风格和边界对齐”，不作为事实真相来源。与当前 PRD 冲突时，以当前 PRD + 工程现状为准。
-
-## 领域特化启发式（基于历史样本）
-
-### 微粒贷类 PRD（复杂多期、多系统）
+### 微粒贷类（多系统）
 
 - 默认按“期数 x 还款场景 x 系统边界”拆分。
-- 重点关注：代偿后还款、部分还款、逾期/宽限期、跳期校验、容差策略。
-- 若同时涉及 `lcs` 与 `instloancore`，默认输出 2 份系分（必要时再加总览）。
-- 文档中必须单列“资方口径 vs 我方口径”的一致性与差异处理。
+- 若涉及 `lcs` 与 `instloancore`，默认输出多份系分文档。
+- 单列“资方口径 vs 我方口径”一致性处理。
 
-### 费率计算器类 PRD（规则/公式密集）
+### 费率计算器类（规则密集）
 
-- 必须输出 `规则矩阵`，最少包含：`Xcap`、未来预估应收、未来预估抵扣、预估减免金额。
-- 必须列出校验规则（如不允许跳期、还款时间顺序校验）与异常文案。
-- 必须列出兼容字段和开关策略（如新旧 `calcRateType`、`extraInfo` 扩展字段、灰度开关）。
-- 必须明确“历史逻辑回归范围”，避免新逻辑污染旧路径。
-
-## 大 PRD 拆分协议（针对超长文档）
-
-当 PRD 篇幅较大或包含多期（如 1/2/2.5/3 期）时，必须先拆分再设计：
-
-0. 先做“分段读取”与“目录索引”，避免漏读关键约束或附录规则。
-1. 按“业务场景/期数/系统边界”切片。
-2. 形成 `需求切片映射表`，至少包含：
-   - PRD 章节
-   - 场景/能力点
-   - 目标系统（如 `lcs`/`instloancore`）
-   - 变更类型（复用/改造/新增）
-   - 预计输出文档
-3. 若映射到多个系统，默认生成“多份系分文档”，每份文档只覆盖其系统边界。
-4. 在进入方案定稿前，先让用户确认映射表。
-
-## 强制流程（SDD 分阶段）
-
-按以下阶段执行，不得跳过关键门禁：
-
-1. `SPEC`：需求分析（做什么、为什么）
-2. `SPLIT`：大 PRD 切片与系统映射（单文档/多文档判定）
-3. `CURRENT_STATE`：读取工程现状（现在是什么样）
-4. `PLAN`：至少两个可选方案（A/B）并等待用户决策
-5. `DOC`：按模板产出完整系分文档（支持多文档）
-6. `REVIEW`：一致性检查与交付确认
-
----
-
-## Phase 1 - SPEC（需求分析）
-
-从 PRD 中提取并结构化：
-
-- 业务目标与用户价值
-- 范围（In/Out of Scope）
-- 关键业务流程
-- 功能需求与非功能需求
-- 约束条件（技术、合规、性能、依赖）
-- 验收标准
-
-输出 `需求分析摘要`，并将不确定项标记为 `❓待确认`。阻塞性问题必须先向用户澄清。
-
-## Phase 2 - SPLIT（切片与文档规划）
-
-输出 `需求切片映射表` 与 `输出计划`：
-
-| 切片ID | 场景/能力点 | 目标系统 | 变更类型 | 输出文档 |
-| --- | --- | --- | --- | --- |
-| S1 | 示例：代偿后还款 | instloancore | 新增 | `instloancore-xxx系分.md` |
-
-规则：
-
-- 单系统集中改造：可输出 1 份系分。
-- 多系统边界清晰：输出 N 份系分（每系统 1 份），并补 1 份总览索引（可选）。
-- 若用户要求“只出一份”，必须说明跨系统耦合风险与评审成本。
-
-## Phase 3 - CURRENT_STATE（工程现状读取）
-
-必须读取当前工程，确认已有能力后再设计。优先检查：
-
-- 项目说明：`README`、`docs`、接口文档
-- 关键模块：业务服务、领域模型、数据访问层
-- 现有接口：路由、请求/响应模型、鉴权/验签规范
-- 数据层：表结构、迁移脚本、实体关系
-- 非功能：监控、日志、限流、任务调度、回归用例
-
-输出 `现状能力清单`（建议表格）：
-
-| 能力点 | 现状结论 | 证据（文件/模块） | 与 PRD 关系 |
-| --- | --- | --- | --- |
-| 示例：订单创建 | 已支持基础下单 | `order/service` | 改造 |
-
-`与 PRD 关系` 仅使用：`复用` / `改造` / `新增` / `缺失`。
-
-增强要求：
-
-- 如果存在历史同类系分，新增 `历史对照列`：本次方案相对历史的差异点。
-- 对“公式/规则型需求”（如费率、减免、容差）输出独立 `规则矩阵`：
-  - 公式
-  - 输入字段
-  - 边界条件
-  - 特殊场景
-  - 告警/兜底策略
-
-## Phase 4 - PLAN（双方案设计 + 用户选择）
-
-必须提供至少两个方案（A/B，可扩展 C），每个方案至少覆盖：
-
-- 业务用例变化
-- 组件与模块改动
-- 关键交互时序
-- 数据模型与表结构影响
-- 接口影响（新增/变更/兼容）
-- 非功能影响（性能、监控、稳定性、发布风险）
-
-并且每个方案都要包含：
-
-- 上游/下游系统影响范围
-- 灰度与开关策略（开关名、命中条件、回滚方式）
-- 兼容策略（旧入参/旧逻辑兜底）
-- 回归范围（历史逻辑 + 新增逻辑）
-
-同时给出对比表：
-
-| 维度 | 方案 A | 方案 B |
-| --- | --- | --- |
-| 实现复杂度 |  |  |
-| 改造范围 |  |  |
-| 兼容性风险 |  |  |
-| 交付周期 |  |  |
-| 可维护性 |  |  |
-| 推荐结论 |  |  |
-
-必须明确请求用户选择，未选择前不得进入最终文档定稿。
-
-## Phase 5 - DOC（按模板产出系分）
-
-严格按照 `template_path` 对应模板结构输出，默认是 `templates/系分模版.md`。
-
-章节顺序必须保持一致：
-
-1. 概述
-2. 方案设计
-3. 数据库设计
-4. 接口设计
-5. 非功能性设计
-6. 其他
-
-要求：
-
-- 模板中的占位项都要处理；未知内容写 `待确认（原因）`，不要编造。
-- 所有图统一使用 PlantUML 代码块（`plantuml`）。
-- 文档内容必须与用户选定方案一致，并体现“现状 vs 新增/改造”。
-- 接口列表、关键字段规则、数据关系验证需要可检查、可追溯。
-- 对“多文档输出”场景：每份文档都要显式写出系统边界、输入输出、依赖系统。
-- 若历史文档中存在 Mermaid 或外链图片，本次必须补充等价 PlantUML 图，不得只给占位。
-
-PlantUML 输出示例：
-
-```plantuml
-@startuml
-title 组件图（示例）
-package "核心系统" {
-  [API Gateway]
-  [Order Service]
-  [Risk Service]
-}
-[API Gateway] --> [Order Service]
-[Order Service] --> [Risk Service]
-@enduml
-```
-
-## Phase 6 - REVIEW（交付前校验）
-
-在交付前执行自检：
-
-- 是否完全遵循模板章节与顺序
-- 是否覆盖 PRD 核心需求与验收点
-- 是否引用工程现状并说明复用/改造/新增
-- 是否已给出并确认用户选择的方案
-- 图是否全部为 PlantUML，且语义与正文一致
-- 关键接口、数据模型、非功能设计是否成对齐闭环
-- 对超长 PRD：是否已完成“PRD 段落 -> 系分章节”的可追踪映射
-- 对多文档：是否包含跨文档依赖与联调边界说明
-
-若仍有缺口，先列出缺口和建议补充，再请求用户确认。
-
-## 不可违反规则
-
-1. 先读 PRD，再读工程现状，再做方案；顺序不可反。
-2. 大 PRD 必须先做切片映射，确认后再出正文。
-3. 方案阶段必须给 A/B 至少两案，并等待用户选择。
-4. 不得凭空假设现状实现，不得编造接口/表结构。
-5. 输出格式必须以模板为准，不得擅自改章节主结构。
-6. 图一律 PlantUML，不使用 Mermaid 或其他图语法。
-7. 遇到历史样本与当前 PRD 冲突，优先当前 PRD 与现状证据。
-
-## 推荐输出骨架（每轮）
-
-每次阶段输出都附带三件套：
-
-- 当前阶段：`SPEC | SPLIT | CURRENT_STATE | PLAN | DOC | REVIEW`
-- 下一步：一句话说明将做什么
-- 需要用户做什么：选择方案 / 补充信息 / 最终确认
+- 必须输出规则矩阵：`Xcap`、未来预估应收、未来预估抵扣、预估减免金额。
+- 必须覆盖跳期/顺序等校验规则、兼容字段、灰度开关、回归范围。
 
 ## 触发关键词
-
-当用户提到以下内容时应优先启用本 Skill：
 
 - `PRD`
 - `系分文档` / `系统分析`
@@ -257,10 +306,25 @@ package "核心系统" {
 - `方案设计` / `A B 方案`
 - `读取工程现状`
 - `PlantUML` / `组件图` / `时序图` / `ER图`
-- `微粒贷` / `费率计算器` / `代偿后还款`
-- `大 PRD` / `拆分文档` / `多系统系分`
+- `回溯` / `理解错误` / `需求纠偏`
+- `字段新增` / `类型新增` / `兼容处理`
+- `doc` / `docx` / `导出文档`
 
 ## Additional resources
 
-- [examples.md](examples.md) — 历史样本沉淀的“输入 PRD -> 输出骨架”示例
+- [spec.md](spec.md) — SPEC 阶段规则
+- [split.md](split.md) — SPLIT 阶段规则
+- [current-state.md](current-state.md) — CURRENT_STATE 阶段规则
+- [plan.md](plan.md) — PLAN 阶段规则
+- [doc.md](doc.md) — DOC 阶段规则
+- [review.md](review.md) — REVIEW 阶段规则
+- [templates/zh-CN.md](templates/zh-CN.md) — 中文模板块（footer/confirm/gate/resume）
+- [templates/en.md](templates/en.md) — 英文模板块（footer/confirm/gate/resume）
+- [templates/spec.md](templates/spec.md) — SPEC 固定骨架
+- [templates/split.md](templates/split.md) — SPLIT 固定骨架
+- [templates/current-state.md](templates/current-state.md) — CURRENT_STATE 固定骨架
+- [templates/plan.md](templates/plan.md) — PLAN 固定骨架
+- [templates/doc.md](templates/doc.md) — DOC 阶段固定骨架
+- [templates/review.md](templates/review.md) — REVIEW 阶段固定骨架
 - [templates/系分模版.md](templates/系分模版.md) — 默认系分模板
+- [examples.md](examples.md) — 历史样本“输入 PRD -> 输出骨架”示例
