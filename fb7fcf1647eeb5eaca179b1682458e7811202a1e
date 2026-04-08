@@ -1,0 +1,85 @@
+SKILL.md
+  fc64ec64bfdd8e77 3,6,8,10,12,14,16-22,24,26-29,31,33-38,40,42-50,52,54,56-58,60,62,64,66-71,73-75,77,79,81-85,87,89,91-93,95,97-102,104,106-108,110,112,114-121,123,125,127-130,132,134,136-144,146,148,150-157,159,161,163-165,167,169-179,181,183-196,198,200-214,216,218,220,222-228,230,232,234-236,238,240-242,244,246-249,251,253-258,260,262-265,267,269-271,273,275-277,279,281,283-301,309-311,315-328,330
+templates/en.md
+  fc64ec64bfdd8e77 26-27,83-96
+  cf1078d360ad555e 1-25,28-82,97-115
+doc.md
+  cf1078d360ad555e 1-27,33-40,42-45
+  fc64ec64bfdd8e77 28-32,41
+spec.md
+  cf1078d360ad555e 1-15,17-33
+  fc64ec64bfdd8e77 16
+split.md
+  cf1078d360ad555e 1-18,20-43
+  fc64ec64bfdd8e77 19
+templates/doc.md
+  cf1078d360ad555e 1-23,25,31-53,60-63
+  fc64ec64bfdd8e77 24,26-30,54-59
+templates/plan.md
+  fc64ec64bfdd8e77 42-51,92-101
+  cf1078d360ad555e 1-41,52-91,102-105
+templates/spec.md
+  fc64ec64bfdd8e77 38-42,80-84
+  cf1078d360ad555e 1-37,43-79,85-89
+review.md
+  cf1078d360ad555e 1-15,17-18,20-33
+  fc64ec64bfdd8e77 16,19,34
+templates/split.md
+  fc64ec64bfdd8e77 15-17,43-45
+  cf1078d360ad555e 1-14,18-42,46-59
+.gitignore
+  cf1078d360ad555e 1-2
+examples.md
+  fc64ec64bfdd8e77 196-228
+templates/zh-CN.md
+  cf1078d360ad555e 1-25,28-82,97-115
+  fc64ec64bfdd8e77 26-27,83-96
+templates/current-state.md
+  cf1078d360ad555e 1-19,25-51,57-69
+  fc64ec64bfdd8e77 20-24,52-56
+current-state.md
+  cf1078d360ad555e 1-20,25-46,48-52
+  fc64ec64bfdd8e77 21-24,47
+templates/review.md
+  cf1078d360ad555e 1-14,16-17,19-30,32-43,45-46,48-59,61
+  fc64ec64bfdd8e77 15,18,31,44,47,60
+plan.md
+  cf1078d360ad555e 1-20,26-39,42-46
+  fc64ec64bfdd8e77 21-25,40-41
+README.md
+  fc64ec64bfdd8e77 31-34
+  cf1078d360ad555e 7-18,21,24-26,28,30,43
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "fb7fcf1647eeb5eaca179b1682458e7811202a1e",
+  "prompts": {
+    "cf1078d360ad555e": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "310748cf-0d3f-4b7b-b716-ed9764d22147",
+        "model": "gpt-5.3-codex-xhigh-fast"
+      },
+      "human_author": "李志伟",
+      "messages": [],
+      "total_additions": 1151,
+      "total_deletions": 328,
+      "accepted_lines": 831,
+      "overriden_lines": 0
+    },
+    "fc64ec64bfdd8e77": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "69259af9-43ba-4cfe-aaab-ab3ca97cd0cb",
+        "model": "gpt-5.3-codex-xhigh-fast"
+      },
+      "human_author": "李志伟",
+      "messages": [],
+      "total_additions": 486,
+      "total_deletions": 262,
+      "accepted_lines": 486,
+      "overriden_lines": 0
+    }
+  }
+}
