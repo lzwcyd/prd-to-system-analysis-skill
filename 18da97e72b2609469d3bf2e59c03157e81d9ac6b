@@ -1,0 +1,25 @@
+README.md
+  d7d61dc7fd99923e 1,3-5,42
+SKILL.md
+  d7d61dc7fd99923e 2,13,15,21,326,348-349,357-358,364-366,387-392
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "18da97e72b2609469d3bf2e59c03157e81d9ac6b",
+  "prompts": {
+    "d7d61dc7fd99923e": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "f5065326-9d00-4254-b885-f6a6edbf9b54",
+        "model": "claude-opus-4-7-thinking-xhigh"
+      },
+      "human_author": "李志伟",
+      "messages": [],
+      "total_additions": 25,
+      "total_deletions": 23,
+      "accepted_lines": 23,
+      "overriden_lines": 0
+    }
+  }
+}
