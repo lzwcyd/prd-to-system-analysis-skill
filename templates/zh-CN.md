@@ -10,11 +10,11 @@
 **需要用户做什么：** ...
 ```
 
-## 阶段确认块（SPEC / SPLIT / CURRENT_STATE / PLAN / REVIEW）
+## 阶段确认块（CONTEXT_SCAN / SPEC / SPLIT / IMPACT_SCAN / PLAN / REVIEW）
 
 ```markdown
 -------------------
-📌 当前阶段：[SPEC | SPLIT | CURRENT_STATE | PLAN | REVIEW]
+📌 当前阶段：[CONTEXT_SCAN | SPEC | SPLIT | IMPACT_SCAN | PLAN | REVIEW]
 
 请确认以下内容是否正确：
 1. ...
@@ -34,7 +34,7 @@
 -------------------
 📌 即将进入 DOC（按模板生成最终系分）
 
-已确认阶段：SPEC / SPLIT / CURRENT_STATE / PLAN
+已确认阶段：CONTEXT_SCAN / SPEC / SPLIT / IMPACT_SCAN / PLAN
 将使用模板：{template_path}
 计划输出：{single_or_multi_docs}
 
@@ -100,7 +100,8 @@
 
 - `spec.zh-CN.md`
 - `split.zh-CN.md`
-- `current-state.zh-CN.md`
+- `context.zh-CN.md`
+- `impact.zh-CN.md`
 - `plan.zh-CN.md`
 - `review.zh-CN.md`
 - `analysis.state.zh-CN.json`
@@ -109,7 +110,8 @@
 
 - SPEC：`templates/spec.md`（`zh-CN` 区块）
 - SPLIT：`templates/split.md`（`zh-CN` 区块）
-- CURRENT_STATE：`templates/current-state.md`（`zh-CN` 区块）
+- CONTEXT_SCAN：`templates/context-scan.md`（`zh-CN` 区块）
+- IMPACT_SCAN：`templates/impact-scan.md`（`zh-CN` 区块）
 - PLAN：`templates/plan.md`（`zh-CN` 区块）
 - DOC：`templates/doc.md`（`zh-CN` 区块）
 - REVIEW：`templates/review.md`（`zh-CN` 区块）

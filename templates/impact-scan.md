@@ -1,18 +1,24 @@
-# CURRENT_STATE 阶段模板
+# IMPACT_SCAN 阶段模板
 
-固定文案单一来源：CURRENT_STATE 阶段输出骨架请仅使用本文件对应语言模板。
+固定文案单一来源：IMPACT_SCAN 阶段输出骨架请仅使用本文件对应语言模板。
 
 ## zh-CN
 
 ```markdown
-# CURRENT_STATE（工程现状盘点）
+# IMPACT_SCAN（PRD 范围内深扫 + 历史影响评估）
 
-## 现状能力清单
-| 能力点 | 现状结论 | 证据（文件/模块） | 与 PRD 关系 |
+> 现状画像（目录/技术栈/入口/命名等）请直接引用 `context.<lang>.md`，本文件只覆盖 SPLIT 切片范围内的深扫。
+
+## 切片范围（来自 SPLIT）
+- {slice_1}
+- {slice_2}
+
+## 现状能力清单（深扫，引用 context 模块 ID）
+| 能力点 | 现状结论 | 证据（文件/模块/context 模块ID） | 与 PRD 关系 |
 | --- | --- | --- | --- |
 | {capability} | {status} | {evidence_path} | 复用/改造/新增/缺失 |
 
-## 接口与数据现状
+## 接口与数据现状（具体签名 / 表结构 / 迁移脚本）
 - 接口现状：{api_status}
 - 数据模型现状：{data_model_status}
 - 非功能现状：{nfr_status}
@@ -38,14 +44,20 @@
 ## en
 
 ```markdown
-# CURRENT_STATE (Current Engineering Baseline)
+# IMPACT_SCAN (Deep Scan within PRD Scope + Legacy Impact)
 
-## Capability Inventory
-| Capability | Current Conclusion | Evidence (File/Module) | Relation to PRD |
+> Reference `context.<lang>.md` for project-wide profile (directory / stack / entry / naming); this file only covers deep scan within the SPLIT slices.
+
+## Slice Scope (from SPLIT)
+- {slice_1}
+- {slice_2}
+
+## Capability Inventory (deep scan, referencing context module IDs)
+| Capability | Current Conclusion | Evidence (file/module/context module ID) | Relation to PRD |
 | --- | --- | --- | --- |
 | {capability} | {status} | {evidence_path} | reuse/modification/new/missing |
 
-## API and Data Baseline
+## API and Data Baseline (concrete signatures / schemas / migrations)
 - API baseline: {api_status}
 - Data model baseline: {data_model_status}
 - NFR baseline: {nfr_status}

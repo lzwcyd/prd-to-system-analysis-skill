@@ -4,11 +4,11 @@
 
 ## 目标
 
-将已确认的阶段产物（SPEC/SPLIT/CURRENT_STATE/PLAN）收敛为最终系分文档。
+将已确认的阶段产物（CONTEXT_SCAN/SPEC/SPLIT/IMPACT_SCAN/PLAN）收敛为最终系分文档。
 
 ## 进入条件（缺一不可）
 
-1. `SPEC`、`SPLIT`、`CURRENT_STATE`、`PLAN` 已确认并落盘。
+1. `CONTEXT_SCAN`、`SPEC`、`SPLIT`、`IMPACT_SCAN`、`PLAN` 已确认并落盘。
 2. 用户通过 Final Gate Before DOC（明确回复“确认生成”或同义指令）。
 3. 已明确 `template_path`（未指定时默认 `templates/系分模版.md`）。
 

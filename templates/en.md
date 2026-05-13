@@ -10,11 +10,11 @@ Use this file when `lang=en`. The main `SKILL.md` defines workflow rules; this f
 **What I Need From You:** ...
 ```
 
-## Phase Confirmation Block (SPEC / SPLIT / CURRENT_STATE / PLAN / REVIEW)
+## Phase Confirmation Block (CONTEXT_SCAN / SPEC / SPLIT / IMPACT_SCAN / PLAN / REVIEW)
 
 ```markdown
 -------------------
-📌 Current Stage: [SPEC | SPLIT | CURRENT_STATE | PLAN | REVIEW]
+📌 Current Stage: [CONTEXT_SCAN | SPEC | SPLIT | IMPACT_SCAN | PLAN | REVIEW]
 
 Please confirm whether the following is correct:
 1. ...
@@ -34,7 +34,7 @@ Note: if you only send a short confirmation word, it is treated as phase approva
 -------------------
 📌 About to enter DOC (generate final system analysis from template)
 
-Confirmed phases: SPEC / SPLIT / CURRENT_STATE / PLAN
+Confirmed phases: CONTEXT_SCAN / SPEC / SPLIT / IMPACT_SCAN / PLAN
 Template to use: {template_path}
 Planned outputs: {single_or_multi_docs}
 
@@ -100,7 +100,8 @@ Please choose:
 
 - `spec.en.md`
 - `split.en.md`
-- `current-state.en.md`
+- `context.en.md`
+- `impact.en.md`
 - `plan.en.md`
 - `review.en.md`
 - `analysis.state.en.json`
@@ -109,7 +110,8 @@ Please choose:
 
 - SPEC: `templates/spec.md` (`en` section)
 - SPLIT: `templates/split.md` (`en` section)
-- CURRENT_STATE: `templates/current-state.md` (`en` section)
+- CONTEXT_SCAN: `templates/context-scan.md` (`en` section)
+- IMPACT_SCAN: `templates/impact-scan.md` (`en` section)
 - PLAN: `templates/plan.md` (`en` section)
 - DOC: `templates/doc.md` (`en` section)
 - REVIEW: `templates/review.md` (`en` section)

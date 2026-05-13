@@ -207,7 +207,7 @@ _灰度开关：lcs.calculateRateUseNewSwitch_
 ### 期望行为（状态机）
 
 1. 回退到 `SPEC_CONFIRMING`，重写 In/Out of Scope
-2. 标记 `split/current-state/plan` 为 stale，重新生成
+2. 标记 `split/impact/plan` 为 stale，重新生成
 3. 在 `PLAN` 写入命名约束清单 + 兼容方案
 4. 在 `DOC` 增加“历史逻辑影响与兼容处理”
 5. 在 `REVIEW` 校验“字段演进 -> 兼容策略 -> 回归用例”闭环
